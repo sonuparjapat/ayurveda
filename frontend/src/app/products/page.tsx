@@ -121,7 +121,19 @@ export default function ProductsPage() {
       />
     ))
   }
-
+const addToWishlist = async (productId: string) => {
+  try {
+    await fetch('/api/wishlist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ productId })
+    })
+  } catch (err) {
+    console.error(err)
+  }
+}
   const addToCart = async (productId: string) => {
     try {
       const response = await fetch('/api/cart', {
