@@ -6,44 +6,39 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { CartSheet } from '@/components/cart/cart-sheet'
-import { 
-  Search, 
-  ShoppingCart, 
-  User, 
-  Menu, 
-  X, 
+import {
+  Search,
+  User,
+  Menu,
+  X,
   Heart,
   Phone,
   Mail,
-  LogOut
+  LogOut,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
 export function Header() {
   const router = useRouter()
+
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    // Check authentication status
     const loginStatus = localStorage.getItem('isLoggedIn')
     const userData = localStorage.getItem('user')
-    
-    // Use setTimeout to avoid synchronous setState
+
     setTimeout(() => {
       setIsLoggedIn(!!loginStatus)
-      if (userData) {
-        setUser(JSON.parse(userData))
-      }
+      if (userData) setUser(JSON.parse(userData))
     }, 0)
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('user')
+    localStorage.clear()
     setIsLoggedIn(false)
     setUser(null)
     router.push('/')
@@ -59,23 +54,29 @@ export function Header() {
   return (
     <>
       {/* Top Bar */}
-      <div className="bg-emerald-700 text-white py-2 text-sm">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+      <div className="bg-emerald-700 text-white text-xs sm:text-sm py-2">
+        <div className="container mx-auto px-3 sm:px-4 flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-center">
+
+          {/* Contact */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
             <div className="flex items-center gap-1">
-              <Phone className="w-4 h-4" />
+              <Phone size={14} />
               <span>+91 98765 43210</span>
             </div>
+
             <div className="flex items-center gap-1">
-              <Mail className="w-4 h-4" />
+              <Mail size={14} />
               <span>info@ayurvedesifoods.com</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-emerald-600 text-white">
+
+          {/* Badges */}
+          <div className="flex gap-2 flex-wrap justify-center">
+            <Badge className="bg-emerald-600 text-white text-xs">
               100% Natural
             </Badge>
-            <Badge variant="secondary" className="bg-emerald-600 text-white">
+
+            <Badge className="bg-emerald-600 text-white text-xs">
               Free Shipping ₹500+
             </Badge>
           </div>
@@ -83,192 +84,218 @@ export function Header() {
       </div>
 
       {/* Main Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">A</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">AyurVeda</h1>
-                <p className="text-xs text-emerald-600">Desi Foods</p>
-              </div>
-            </Link>
+      <header className="bg-white shadow sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4">
 
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-lg mx-8">
+          {/* Main Row */}
+          <div className="flex items-center justify-between h-16 gap-2">
+
+            {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 min-w-fit">
+
+  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+    <span className="text-white font-bold text-lg sm:text-xl">
+      A
+    </span>
+  </div>
+
+  <div className="flex flex-col leading-tight">
+
+    <h1 className="text-sm sm:text-lg md:text-xl font-bold">
+      AyurVeda
+    </h1>
+
+    <p className="text-[9px] sm:text-xs text-emerald-600">
+      Desi Foods
+    </p>
+
+  </div>
+
+</Link>
+
+            {/* Desktop Search */}
+            <div className="hidden md:flex flex-1 max-w-xl mx-4">
+
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+
                 <Input
-                  placeholder="Search for herbs, dry fruits, tofu..."
-                  className="pl-10 pr-4 py-2 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                  placeholder="Search products..."
+                  className="pl-9 text-sm"
                 />
               </div>
+
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 sm:gap-3">
+
+              {/* Search Btn */}
               <Button
                 variant="ghost"
-                size="sm"
-                className="hidden md:flex items-center gap-2"
+                size="icon"
+                className="md:hidden"
                 onClick={() => setIsSearchOpen(true)}
               >
-                <Search className="w-5 h-5" />
+                <Search size={20} />
               </Button>
-              
-                <Button variant="ghost" size="sm" className="flex items-center gap-2" asChild>
+
+              {/* Wishlist */}
+              <Button variant="ghost" size="icon" asChild>
                 <Link href="/wishlist">
-                  <Heart className="w-5 h-5" />
-                  <span className="hidden md:inline">Wishlist</span>
+                  <Heart size={20} />
                 </Link>
               </Button>
-              
+
+              {/* Account */}
               {isLoggedIn ? (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2" asChild>
+                <>
+                  <Button variant="ghost" size="icon" asChild>
                     <Link href="/account">
-                      <User className="w-5 h-5" />
-                      <span className="hidden md:inline">{user?.name?.split(' ')[0] || 'Account'}</span>
+                      <User size={20} />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={handleLogout}>
-                    <LogOut className="w-5 h-5" />
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={20} />
                   </Button>
-                </div>
+                </>
               ) : (
-                <Button variant="ghost" size="sm" className="flex items-center gap-2" asChild>
+                <Button variant="ghost" size="icon" asChild>
                   <Link href="/auth">
-                    <User className="w-5 h-5" />
-                    <span className="hidden md:inline">Login</span>
+                    <User size={20} />
                   </Link>
                 </Button>
               )}
-              
+
               <CartSheet />
 
-              {/* Mobile Menu Toggle */}
+              {/* Menu */}
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 className="md:hidden"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {isMenuOpen ? <X /> : <Menu />}
               </Button>
+
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex border-t border-gray-200">
-            <div className="flex items-center gap-8 py-4">
-              {categories.map((category) => (
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex border-t">
+
+            <div className="flex gap-6 py-3 text-sm">
+
+              {categories.map((cat) => (
                 <Link
-                  key={category.name}
-                  href={category.href}
-                  className="text-gray-700 hover:text-emerald-600 font-medium transition-colors"
+                  key={cat.name}
+                  href={cat.href}
+                  className="hover:text-emerald-600 font-medium"
                 >
-                  {category.name}
+                  {cat.name}
                 </Link>
               ))}
-              <Link href="/blog" className="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
-                Blog
-              </Link>
-              <Link href="/about" className="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
-                About Us
-              </Link>
+
+              <Link href="/blog">Blog</Link>
+              <Link href="/about">About Us</Link>
+
             </div>
+
           </nav>
+
         </div>
 
         {/* Mobile Menu */}
         <AnimatePresence>
           {isMenuOpen && (
+
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-gray-200 bg-white"
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
+              className="md:hidden bg-white border-t overflow-hidden"
             >
-              <div className="container mx-auto px-4 py-4 space-y-4">
+
+              <div className="px-4 py-4 space-y-4">
+
+                {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
                   <Input
-                    placeholder="Search products..."
-                    className="pl-10 pr-4 py-2"
+                    placeholder="Search..."
+                    className="pl-9"
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.name}
-                      href={category.href}
-                      className="block py-2 text-gray-700 hover:text-emerald-600 font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
+
+                {/* Links */}
+                {categories.map((cat) => (
                   <Link
-                    href="/blog"
-                    className="block py-2 text-gray-700 hover:text-emerald-600 font-medium"
+                    key={cat.name}
+                    href={cat.href}
                     onClick={() => setIsMenuOpen(false)}
+                    className="block py-2 font-medium"
                   >
-                    Blog
+                    {cat.name}
                   </Link>
-                  <Link
-                    href="/about"
-                    className="block py-2 text-gray-700 hover:text-emerald-600 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    About Us
-                  </Link>
-                </div>
+                ))}
+
+                <Link href="/blog">Blog</Link>
+                <Link href="/about">About Us</Link>
+
               </div>
+
             </motion.div>
+
           )}
         </AnimatePresence>
+
       </header>
 
-      {/* Mobile Search Overlay */}
+      {/* Mobile Search */}
       <AnimatePresence>
         {isSearchOpen && (
+
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20"
+            className="fixed inset-0 bg-black/50 z-50 flex justify-center pt-24 px-3"
             onClick={() => setIsSearchOpen(false)}
           >
+
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-2xl mx-4 rounded-lg shadow-xl"
+              className="bg-white w-full max-w-lg rounded-lg p-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4">
-                <div className="flex items-center gap-4">
-                  <Search className="w-6 h-6 text-gray-400" />
-                  <Input
-                    placeholder="Search for herbs, dry fruits, tofu..."
-                    className="flex-1 border-0 focus:ring-0 text-lg"
-                    autoFocus
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsSearchOpen(false)}
-                  >
-                    <X className="w-6 h-6" />
-                  </Button>
-                </div>
+
+              <div className="flex gap-3 items-center">
+
+                <Search size={22} />
+
+                <Input
+                  autoFocus
+                  placeholder="Search..."
+                  className="flex-1"
+                />
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSearchOpen(false)}
+                >
+                  <X />
+                </Button>
+
               </div>
+
             </motion.div>
+
           </motion.div>
+
         )}
       </AnimatePresence>
     </>

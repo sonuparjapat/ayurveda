@@ -64,27 +64,35 @@ export function HeroSection() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button 
-                size="lg" 
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-semibold"
-                asChild
-              >
-                <Link href="/products">
-                  Shop Now
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-8 py-3 text-lg font-semibold"
-              >
-                <Play className="mr-2 w-5 h-5" />
-                Watch Story
-              </Button>
-            </div>
+        <div className="relative z-20 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+
+  {/* Shop Now */}
+  <Button
+    size="lg"
+    className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-semibold"
+    asChild
+  >
+    <Link href="/products">
+      Shop Now
+      <ArrowRight className="ml-2 w-5 h-5" />
+    </Link>
+  </Button>
+
+
+  {/* Watch Story */}
+  <Button
+    variant="outline"
+    size="lg"
+    className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-8 py-3 text-lg font-semibold"
+    asChild
+  >
+    <Link href="/about">
+      <Play className="mr-2 w-5 h-5" />
+      Watch Story
+    </Link>
+  </Button>
+
+</div>
 
             {/* Trust Indicators */}
             <div className="mt-12 pt-8 border-t border-gray-200">
