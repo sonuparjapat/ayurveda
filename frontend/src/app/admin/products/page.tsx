@@ -4,71 +4,42 @@ import { useEffect, useState } from 'react'
 import axios from '@/lib/axios'
 import toast from 'react-hot-toast'
 
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-
-import {
-  Eye,
-  Trash2,
+  Plus,
   Search,
-  Loader2,
+  Eye,
   Pencil,
+  Trash2,
+  X,
+  Loader2,
 } from 'lucide-react'
+
+import AdminProductForm from './AdminProductForm'
 
 
 export default function AdminProducts() {
 
-  /* ---------------- STATES ---------------- */
+  /* ================= STATE ================= */
 
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+
   const [total, setTotal] = useState(0)
-const [editItem, setEditItem] = useState<any>(null)
-  const [submitting, setSubmitting] = useState(false)
-
-  const [viewItem, setViewItem] = useState<any>(null)
-const [editImages, setEditImages] = useState<File[]>([])
-  const [form, setForm] = useState<any>({
-    name: '',
-    category: '',
-    price: '',
-    stock: '',
-    description: '',
-    images: [],
-  })
-
-
   const limit = 8
 
+  const [showForm, setShowForm] = useState(false)
 
-  /* ---------------- LOAD ---------------- */
+  const [currentItem, setCurrentItem] = useState<any>(null)
+  const [formMode, setFormMode] = useState<'create'|'edit'|'view'>('create')
 
-  useEffect(() => {
-    loadProducts()
-  }, [page, search])
+  const [deleteItem, setDeleteItem] = useState<any>(null)
 
-const openEdit = (product: any) => {
 
-  setEditItem({
-    id: product.id,
-    name: product.name,
-    description: product.description,
-    price: product.price,
-    stock: product.inventory,
-    category: product.category_name,
-    images:product?.images
-  })
+  /* ================= LOAD ================= */
 
-}
   const loadProducts = async () => {
 
     try {
@@ -76,592 +47,566 @@ const openEdit = (product: any) => {
       setLoading(true)
 
       const res = await axios.get(
-        `/admin/products?page=${page}&limit=${limit}&search=${search}`,
-        {
-          withCredentials: true, // ✅ USE COOKIES
-        }
-      )
+  `/admin/products?page=${page}&limit=${limit}&search=${search}`,
+)
 
-      setProducts(res.data.products)
-      setTotal(res.data.total)
+      setProducts(res.data.products || [])
+      setTotal(res.data.total || 0)
 
     } catch {
-      toast.error('Failed to load products')
+
+      toast.error('Load failed')
+
     } finally {
+
       setLoading(false)
+
     }
+
   }
 
-const updateProduct = async () => {
 
-  try {
+useEffect(() => {
 
-    setSubmitting(true)
-
-    const data = new FormData()
-
-    data.append('name', editItem.name)
-    data.append('description', editItem.description)
-    data.append('price', editItem.price)
-    data.append('stock', editItem.stock)
-    data.append('category', editItem.category)
-
-    // send old images for delete
-    data.append('oldImages', editItem.images || '[]')
-
-
-    // new images
-    editImages.forEach(file => {
-      data.append('images', file)
-    })
-
-
-    await axios.put(
-      `/admin/products/${editItem.id}`,
-      data,
-      {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    )
-
-
-    toast.success('Updated successfully')
-
-    setEditItem(null)
-    setEditImages([])
-
+  const t = setTimeout(() => {
     loadProducts()
+  }, 400)
 
-  } catch {
+  return ()=> clearTimeout(t)
 
-    toast.error('Update failed')
+}, [page, search])
 
-  } finally {
 
-    setSubmitting(false)
+  /* ================= DELETE ================= */
 
-  }
-
-}
-  /* ---------------- CREATE ---------------- */
-
-  const handleSubmit = async () => {
+  const handleDelete = async () => {
 
     try {
 
-      setSubmitting(true)
-
-      const data = new FormData()
-
-      Object.keys(form).forEach(key => {
-
-        if (key === 'images') {
-
-          form.images.forEach((f: any) => {
-            data.append('images', f)
-          })
-
-        } else {
-          data.append(key, form[key])
-        }
-
-      })
-
-
-      await axios.post('/admin/products', data, {
-        withCredentials: true, // ✅ COOKIE AUTH
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-
-
-      toast.success('Product added')
-
-      setForm({
-        name: '',
-        category: '',
-        price: '',
-        stock: '',
-        description: '',
-        images: [],
-      })
-
-      loadProducts()
-
-    } catch {
-      toast.error('Create failed')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-
-  /* ---------------- DELETE ---------------- */
-
-  const deleteProduct = async (id: string) => {
-
-    if (!confirm('Delete product?')) return
-
-    try {
-
-      await axios.delete(`/admin/products/${id}`, {
-        withCredentials: true, // ✅ COOKIE AUTH
-      })
+      await axios.delete(
+        `/admin/products/${deleteItem.id}`,
+        { withCredentials: true }
+      )
 
       toast.success('Deleted')
 
+      setDeleteItem(null)
+
       loadProducts()
 
     } catch {
+
       toast.error('Delete failed')
+
     }
+
   }
 
 
-/* ---------------- UI ---------------- */
+  const totalPages = Math.ceil(total / limit)
 
-return (
-<div className="space-y-6">
 
+  /* ================= UI ================= */
 
-{/* HEADER */}
+  return (
 
-<div className="flex flex-col sm:flex-row gap-3 justify-between">
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
 
-<h1 className="text-xl sm:text-2xl font-bold">
-Product Management
-</h1>
 
+      {/* HEADER */}
 
-<div className="flex gap-2 w-full sm:w-auto">
+      <div className="flex justify-between items-center">
 
-<div className="relative w-full sm:w-64">
+        <div>
 
-<Search
-size={16}
-className="absolute left-2 top-2.5 text-gray-400"
-/>
+          <h1 className="text-2xl font-bold">
+            Products
+          </h1>
 
-<Input
-className="pl-7"
-placeholder="Search..."
-value={search}
-onChange={e => {
-  setSearch(e.target.value)
-  setPage(1)
-}}
-/>
+          <p className="text-sm text-gray-500">
+            Manage store products
+          </p>
 
-</div>
+        </div>
 
-</div>
 
-</div>
+        <button
+          onClick={() => {
+            setCurrentItem(null)
+            setFormMode('create')
+            setShowForm(true)
+          }}
+          className="
+            flex items-center gap-2
+            bg-emerald-600 text-white
+            px-4 py-2 rounded-lg
+            hover:bg-emerald-700
+          "
+        >
 
+          <Plus size={18} />
+          Add Product
 
-{/* ADD PRODUCT */}
+        </button>
 
-<Card>
+      </div>
 
-<CardHeader>
-<CardTitle>Add Product</CardTitle>
-</CardHeader>
 
-<CardContent className="grid md:grid-cols-2 gap-3">
+      {/* SEARCH */}
 
+      <div className="relative w-72">
 
-<Input
-placeholder="Name"
-value={form.name}
-onChange={e => setForm({...form,name:e.target.value})}
-/>
+        <Search
+          size={16}
+          className="absolute left-3 top-3 text-gray-400"
+        />
 
-<Input
-placeholder="Category"
-value={form.category}
-onChange={e => setForm({...form,category:e.target.value})}
-/>
+        <input
+          value={search}
+          onChange={e => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
+          placeholder="Search products..."
+          className="
+            w-full border rounded-lg
+            pl-9 pr-3 py-2
+          "
+        />
 
-<Input
-type="number"
-placeholder="Price"
-value={form.price}
-onChange={e => setForm({...form,price:e.target.value})}
-/>
+      </div>
 
-<Input
-type="number"
-placeholder="Stock"
-value={form.stock}
-onChange={e => setForm({...form,stock:e.target.value})}
-/>
 
-<Input
-placeholder="Description"
-value={form.description}
-onChange={e => setForm({...form,description:e.target.value})}
-/>
+      {/* TABLE */}
 
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
 
-<input
-type="file"
-multiple
-className="text-sm border rounded p-2"
-onChange={e =>
-  setForm({
-    ...form,
-    images: Array.from(e.target.files || []),
-  })
-}
-/>
 
+        {loading ? (
 
-<Button
-className="bg-emerald-600 md:col-span-2"
-onClick={handleSubmit}
-disabled={submitting}
->
+          <div className="p-10 flex justify-center">
+            <Loader2 className="animate-spin" />
+          </div>
 
-{submitting && (
-  <Loader2 size={16} className="mr-1 animate-spin" />
-)}
+        ) : (
 
-Add Product
+          <div className="overflow-x-auto">
 
-</Button>
+            <table className="w-full text-sm">
 
-</CardContent>
+              <thead className="bg-gray-100">
+   <tr>
 
-</Card>
+        <th className="p-3 text-center w-[60px]">
+      #
+    </th>
+                        <th className="p-3 text-left w-[70px]">
+                    Image
+                  </th>
 
+                  <th className="p-3 text-left">
+                    Name
+                  </th>
 
-{/* PRODUCT LIST */}
+                  <th className="p-3 text-center w-[100px]">
+                    Price
+                  </th>
 
-<Card>
+                  <th className="p-3 text-center w-[80px]">
+                    Stock
+                  </th>
 
-<CardHeader>
-<CardTitle>All Products</CardTitle>
-</CardHeader>
+                  <th className="p-3 text-center w-[100px]">
+                    Status
+                  </th>
 
-<CardContent className="p-0">
+                  <th className="p-3 text-center w-[140px]">
+                    Actions
+                  </th>
 
+                </tr>
 
-{loading ? (
+              </thead>
 
-<div className="py-10 text-center">
-<Loader2 className="mx-auto animate-spin" />
-</div>
 
-) : (
+              <tbody>
 
-<div className="overflow-x-auto">
+                {products.length === 0 && (
 
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-6 text-center text-gray-500"
+                    >
+                      No products found
+                    </td>
+                  </tr>
 
-<table className="w-full text-sm">
+                )}
 
-<thead className="bg-gray-100">
 
-<tr>
+                {products.map((p:any,index:number) => (
 
-<th className="p-3 text-left">Name</th>
-<th className="p-3 hidden sm:table-cell">Category</th>
-<th className="p-3">Price</th>
-<th className="p-3 hidden md:table-cell">Stock</th>
-<th className="p-3 text-center">Action</th>
+                  <tr
+                    key={p.id}
+                    className="border-b hover:bg-gray-50"
+                  ><td className="p-3 text-center text-gray-500">
 
-</tr>
-
-</thead>
-
-
-<tbody>
-
-
-{products.map(p => (
-
-<tr
-key={p.id}
-className="border-b hover:bg-gray-50"
->
-
-
-<td className="p-3 font-medium">
-{p.name}
-</td>
-
-
-<td className="p-3 hidden sm:table-cell">
-{p.category_name}
-</td>
-
-
-<td className="p-3">
-₹{p.price}
-</td>
-
-
-<td className="p-3 hidden md:table-cell">
-{p.inventory}
-</td>
-
-
-<td className="p-3 text-center">
-
-<div className="flex justify-center gap-2">
-
-  {/* VIEW */}
-  <Button
-    size="sm"
-    variant="outline"
-    onClick={() => setViewItem(p)}
-  >
-    <Eye size={14} />
-  </Button>
-
-  {/* EDIT */}
-  <Button
-    size="sm"
-    variant="secondary"
-    onClick={() => openEdit(p)}
-  >
-    <Pencil size={14} />
-  </Button>
-
-  {/* DELETE */}
-  <Button
-    size="sm"
-    variant="destructive"
-    onClick={() => deleteProduct(p.id)}
-  >
-    <Trash2 size={14} />
-  </Button>
-
-</div>
+  {(page - 1) * limit + index + 1}
 
 </td>
 
-</tr>
+                    {/* IMAGE */}
 
-))}
+                    <td className="p-2">
 
+                      <img
+                        src={p.images?.[0] || '/no-image.png'}
+                        className="
+                          w-12 h-12
+                          rounded-lg
+                          object-cover
+                          border
+                        "
+                      />
 
-</tbody>
-
-</table>
-
-</div>
-
-)}
-
-</CardContent>
-
-</Card>
-
-
-{/* PAGINATION */}
-
-<div className="flex justify-center flex-wrap gap-2">
-
-{Array.from({
-  length: Math.ceil(total / limit),
-}).map((_, i) => (
-
-<Button
-key={i}
-size="sm"
-variant={page === i+1 ? 'default' : 'outline'}
-onClick={() => setPage(i+1)}
->
-{i+1}
-</Button>
-
-))}
-
-</div>
+                    </td>
 
 
-{/* VIEW MODAL */}
+                    {/* NAME */}
 
-{viewItem && (
+                    <td className="p-3">
 
-<div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-3">
+                      <div className="font-medium">
+                        {p.name}
+                      </div>
 
-<div className="bg-white w-full max-w-md rounded-lg p-5 space-y-3 max-h-[90vh] overflow-auto">
+                      <div className="text-xs text-gray-500">
+                        {p.category_name}
+                      </div>
 
-<h2 className="font-bold text-lg">
-{viewItem.name}
-</h2>
-
-<p className="text-sm">
-{viewItem.description}
-</p>
-
-<p>₹{viewItem.price}</p>
-<p>Stock: {viewItem.inventory}</p>
+                    </td>
 
 
-<div className="flex gap-2 overflow-x-auto">
+                    {/* PRICE */}
 
-{(viewItem?.images || '[]')?.map((img:any,i:number)=>(
+                    <td className="p-3 text-center">
 
-<img
-key={i}
-src={img}
-alt=""
-className="w-20 h-20 object-cover rounded"
-/>
+                      ₹{p.price}
 
-))}
+                      {p.compareprice && (
 
-</div>
+                        <div className="text-xs text-gray-400 line-through">
+                          ₹{p.compareprice}
+                        </div>
 
+                      )}
 
-<Button
-className="w-full"
-onClick={() => setViewItem(null)}
->
-Close
-</Button>
-
-</div>
-
-</div>
-
-)}
-{editItem && (
-
-<div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-3">
-
-<div className="bg-white w-full max-w-md rounded-lg p-5 space-y-3">
+                    </td>
 
 
-<h2 className="font-bold text-lg">
-Edit Product
-</h2>
+                    {/* STOCK */}
+
+                    <td className="p-3 text-center">
+
+                      <span
+                        className={`
+                          px-2 py-0.5 rounded-full text-xs
+                          ${
+                            p.inventory > 0
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-red-100 text-red-600'
+                          }
+                        `}
+                      >
+
+                        {p.inventory > 0
+                          ? p.inventory
+                          : 'Out'}
+
+                      </span>
+
+                    </td>
 
 
-<Input
-placeholder="Name"
-value={editItem.name}
-onChange={e =>
-  setEditItem({
-    ...editItem,
-    name: e.target.value,
-  })
+                    {/* STATUS */}
+
+                    <td className="p-3 text-center">
+
+                      <span
+                        className={`
+                          px-2 py-0.5 rounded-full text-xs capitalize
+                          ${
+                            p.status === 'published'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-200 text-gray-700'
+                          }
+                        `}
+                      >
+
+                        {p.status}
+
+                      </span>
+
+                    </td>
+
+
+                    {/* ACTIONS */}
+
+                    <td className="p-3">
+
+                      <div className="flex justify-center gap-2">
+
+
+                        <ActionBtn
+                          title="View"
+                          onClick={() => {
+                            setCurrentItem(p)
+                            setFormMode('view')
+                            setShowForm(true)
+                          }}
+                        >
+                          <Eye size={15} />
+                        </ActionBtn>
+
+
+                        <ActionBtn
+                          title="Edit"
+                          onClick={() => {
+                            setCurrentItem(p)
+                            setFormMode('edit')
+                            setShowForm(true)
+                          }}
+                        >
+                          <Pencil size={15} />
+                        </ActionBtn>
+
+
+                        <ActionBtn
+                          danger
+                          title="Delete"
+                          onClick={() => setDeleteItem(p)}
+                        >
+                          <Trash2 size={15} />
+                        </ActionBtn>
+
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        )}
+
+      </div>
+
+
+      {/* PAGINATION */}
+
+      {totalPages > 1 && (
+
+        <div className="flex justify-center gap-1">
+
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(p => p - 1)}
+            className="px-3 py-1 border rounded disabled:opacity-40"
+          >
+            Prev
+          </button>
+
+
+          {Array.from({ length: totalPages }).map((_, i) => (
+
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`
+                px-3 py-1 rounded border text-sm
+                ${
+                  page === i + 1
+                    ? 'bg-emerald-600 text-white'
+                    : 'hover:bg-gray-100'
+                }
+              `}
+            >
+              {i + 1}
+            </button>
+
+          ))}
+
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(p => p + 1)}
+            className="px-3 py-1 border rounded disabled:opacity-40"
+          >
+            Next
+          </button>
+
+        </div>
+
+      )}
+
+
+      {/* FORM MODAL */}
+
+      {showForm && (
+
+        <Modal onClose={() => setShowForm(false)}>
+
+          <AdminProductForm
+            mode={formMode}
+            initialData={currentItem}
+            onSuccess={() => {
+              setShowForm(false)
+              loadProducts()
+            }}
+          />
+
+        </Modal>
+
+      )}
+
+
+      {/* DELETE MODAL */}
+
+      {deleteItem && (
+
+        <Modal onClose={() => setDeleteItem(null)}>
+
+          <div className="text-center space-y-4">
+
+            <Trash2
+              size={40}
+              className="mx-auto text-red-600"
+            />
+
+            <h3 className="text-lg font-bold">
+              Delete Product?
+            </h3>
+
+            <p className="text-sm text-gray-600">
+              This action cannot be undone
+            </p>
+
+
+            <div className="flex justify-center gap-3 pt-2">
+
+              <button
+                onClick={() => setDeleteItem(null)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                Cancel
+              </button>
+
+
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg"
+              >
+                Delete
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </Modal>
+
+      )}
+
+    </div>
+  )
 }
-/>
 
 
-<Input
-placeholder="Category"
-value={editItem.category}
-onChange={e =>
-  setEditItem({
-    ...editItem,
-    category: e.target.value,
-  })
+/* ================= COMPONENTS ================= */
+
+
+function Modal({ children, onClose }: any) {
+
+  return (
+
+    <div
+      className="
+        fixed inset-0 z-50
+        bg-black/50
+        flex items-center justify-center
+        p-4
+      "
+    >
+
+      <div
+        className="
+          bg-white w-full max-w-3xl
+          rounded-xl shadow-xl
+          flex flex-col
+          max-h-[90vh]
+        "
+      >
+
+        <div className="flex justify-between items-center px-6 py-3 border-b">
+
+          <h2 className="font-semibold">
+            Product
+          </h2>
+
+          <button onClick={onClose}>
+            <X size={18} />
+          </button>
+
+        </div>
+
+
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+
+          {children}
+
+        </div>
+
+      </div>
+
+    </div>
+  )
 }
-/>
 
 
-<Input
-type="number"
-placeholder="Price"
-value={editItem.price}
-onChange={e =>
-  setEditItem({
-    ...editItem,
-    price: e.target.value,
-  })
-}
-/>
+function ActionBtn({
+  children,
+  onClick,
+  danger = false,
+  title,
+}: any) {
 
+  return (
 
-<Input
-type="number"
-placeholder="Stock"
-value={editItem.stock}
-onChange={e =>
-  setEditItem({
-    ...editItem,
-    stock: e.target.value,
-  })
-}
-/>
+    <button
+      title={title}
+      onClick={onClick}
+      className={`
+        p-2 rounded-lg border
+        hover:bg-gray-100
+        transition
+        ${
+          danger
+            ? 'text-red-600 hover:bg-red-50'
+            : 'text-gray-700'
+        }
+      `}
+    >
+      {children}
+    </button>
 
-
-<Input
-placeholder="Description"
-value={editItem.description}
-onChange={e =>
-  setEditItem({
-    ...editItem,
-    description: e.target.value,
-  })
-}
-/>
-{/* OLD IMAGES */}
-
-<div className="flex gap-2 overflow-x-auto">
-
-{(editItem?.images || '[]')?.map((img:any,i:number)=>(
-
-  <img
-    key={i}
-    src={img}
-    className="w-16 h-16 rounded object-cover"
-  />
-
-))}
-
-</div>
-<input
-  type="file"
-  multiple
-  className="text-sm border rounded p-2"
-  onChange={e =>
-    setEditImages(Array.from(e.target.files || []))
-  }
-/>
-
-<div className="flex gap-2 pt-2">
-
-<Button
-className="flex-1"
-variant="outline"
-onClick={() => setEditItem(null)}
->
-Cancel
-</Button>
-
-
-<Button
-className="flex-1 bg-emerald-600"
-onClick={updateProduct}
-disabled={submitting}
->
-
-{submitting && (
-  <Loader2 size={16} className="mr-1 animate-spin" />
-)}
-
-Update
-
-</Button>
-
-</div>
-
-
-</div>
-
-</div>
-
-)}
-
-</div>
-)
+  )
 }
